@@ -1,5 +1,9 @@
-import os.path
+# @author Piotr Nikiel <piotr.nikiel@gmail.com>
+
+import sys
+import os
 import string
+sys.path.insert(0, 'FrameworkInternals')
 from manage_files import get_list_classes
 from transformDesign import transformDesign
 
