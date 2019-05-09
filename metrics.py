@@ -19,9 +19,9 @@ def measure_file(filename):
     
 def get_file_names(perspective, class_name):    
     files_per_perspective = {
-        'AddressSpace':['AddressSpace/include/AS{0}.h', 'AddressSpace/src/AS{0}.cpp'],
+        'AddressSpace':['build/AddressSpace/include/AS{0}.h', 'build/AddressSpace/src/AS{0}.cpp'],
         'Device'      :['Device/include/D{0}.h', 'Device/src/D{0}.cpp'],
-        'DeviceBase'  :['Device/generated/Base_D{0}.h', 'Device/generated/Base_D{0}.cpp']
+        'DeviceBase'  :['build/Device/generated/Base_D{0}.h', 'build/Device/generated/Base_D{0}.cpp']
         }
     
     names = map( lambda x: x.format(class_name), files_per_perspective[perspective] )
@@ -60,7 +60,7 @@ def measure_all():
             lines_fake = measure_file('fakeout.txt')
             total_lines_stub += lines_fake
 
-    config_xsd = measure_file('Configuration/Configuration.xsd')
+    config_xsd = measure_file('build/Configuration/Configuration.xsd')
     print 'Configuration: '+str(config_xsd)
                     
     total_lines_fully_automated += config_xsd
