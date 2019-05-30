@@ -90,7 +90,7 @@ def measure_quasar_class(class_desc):
         nGS += lines_fake
     nD = nIC - nGS # developer-written code
     if nD != 0:
-        print '---> Class has {0} ELoCs of developer-written code and {1} ELoCs of generated code, so the automation factor is {2}'.format(nD, nND, float(nND+nD)/float(nD))
+        print '---> Class has {0} ELoCs of developer-written code and {1} ELoCs of generated code, so the automation factor is {2}'.format(nD, nND, float(nND+nIC)/float(nD))
     else:
         print '---> Can not print ratio because number of developer code is zero!'
     return {'nND':nND, 'nIC':nIC, 'nGS':nGS}
@@ -127,7 +127,8 @@ def measure_all():
 
     nD = measured_all_classes['nIC'] - measured_all_classes['nGS'] # developer-written code
     nND = measured_all_classes['nND'] + nND_config_xsd + nND_DeviceRoot
-    ratio = float(nND+nD)/float(nD)
+    nIC = measured_all_classes['nIC']
+    ratio = float(nND+nIC)/float(nD)
     print '-----> nD={0}'.format(nD)
     print '-----> Automation ratio is: {0}'.format(ratio)
 
