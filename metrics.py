@@ -77,7 +77,10 @@ def measure_quasar_class(class_desc):
         print '--> File Devicelogic cpp: {0} ELoc'.format(lines_fake)
         nGS += lines_fake
     nD = nIC - nGS # developer-written code
-    print '---> Class has {0} ELoCs of developer-written code and {1} ELoCs of generated code, so the automation factor is {2}'.format(nD, nND, float(nND+nD)/float(nD))
+    if nD != 0:
+        print '---> Class has {0} ELoCs of developer-written code and {1} ELoCs of generated code, so the automation factor is {2}'.format(nD, nND, float(nND+nD)/float(nD))
+    else:
+        print '---> Can not print ratio because number of developer code is zero!'
     return {'nND':nND, 'nIC':nIC, 'nGS':nGS}
     
 
