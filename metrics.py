@@ -54,8 +54,6 @@ def measure_all():
         print '---> Class {0} has perspectives {1}'.format(class_desc['name'], perspectives)
         for perspective in perspectives:
             names = get_file_names(perspective, class_desc['name'])
-            
-            #print 'processing class='+class_desc['name']+ ': '+str(names)
             for name in names:
                 lines = measure_file(name)
                 print '--> File {0}: {1} ELoC'.format(name, lines)
@@ -67,12 +65,15 @@ def measure_all():
                     total_lines_fully_automated += lines
         if class_desc['has_device_logic']:
             # now generate only stubs
-            transformDesign(os.path.sep.join(['Device','designToDeviceHeader.xslt']), 'fakeout.txt', 0, 0, "className=" + class_desc['name'])
-            lines_fake = measure_file('fakeout.txt')
-            print 'fake lines:'+str(lines_fake)
+            devicelogic_stub_h_path = 'dlstub.h'
+            devicelogic_stub_cpp_path = 'dlstub.cpp'
+            transformDesign(os.path.sep.join(['Device','designToDeviceHeader.xslt']), devicelogic_stub_h_path, requiresMerge=False, astyleRun=False, additionalParam="className=" + class_desc['name'])
+            lines_fake = measure_file(devicelogic_stub_h_path)
+            print '--> File Devicelogic h: {0} ELoc'.format(lines_fake)
             total_lines_stub += lines_fake
-            transformDesign(os.path.sep.join(['Device','designToDeviceBody.xslt']), 'fakeout.txt', 0, 0, "className=" + class_desc['name'])
-            lines_fake = measure_file('fakeout.txt')
+            transformDesign(os.path.sep.join(['Device','designToDeviceBody.xslt']), devicelogic_stub_cpp_path, requiresMerge=False, astyleRun=False, additionalParam="className=" + class_desc['name'])
+            lines_fake = measure_file(devicelogic_stub_cpp_path)
+            print '--> File Devicelogic cpp: {0} ELoc'.format(lines_fake)
             total_lines_stub += lines_fake
 
     config_xsd = measure_file('build/Configuration/Configuration.xsd')
