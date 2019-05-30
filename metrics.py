@@ -32,6 +32,8 @@ def how_many_lines(path):
     
 def measure_file(filename):
     ''' Returns a pair of (non-empty)LoC and chars'''
+    if '--dont_skip_comments_and_empty' in sys.argv:
+        return measure_file_raw(filename)
     #print 'Measuring ELoC of file {0}'.format(filename)
     eloc_path = filename+'.eloc'
     os_system_report_failure('gcc -fpreprocessed -dD -E -P {0} > {1}'.format(filename, eloc_path))
