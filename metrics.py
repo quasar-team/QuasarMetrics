@@ -122,8 +122,11 @@ def measure_all():
     nND_config_xsd = measure_file_raw('build/Configuration/Configuration.xsd')
     print '-----> Configuration: '+str(nND_config_xsd)
 
+    nND_DeviceRoot = measure_file('build/Device/include/DRoot.h') + measure_file('build/Device/src/DRoot.cpp')
+    print '-----> Device Root: {0}'.format(nND_DeviceRoot)
+
     nD = measured_all_classes['nIC'] - measured_all_classes['nGS'] # developer-written code
-    nND = measured_all_classes['nND'] + nND_config_xsd
+    nND = measured_all_classes['nND'] + nND_config_xsd + nND_DeviceRoot
     ratio = float(nND+nD)/float(nD)
     print '-----> nD={0}'.format(nD)
     print '-----> Automation ratio is: {0}'.format(ratio)
