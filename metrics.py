@@ -3,6 +3,7 @@
 import sys
 import os
 import string
+import pickle
 sys.path.insert(0, 'FrameworkInternals')
 from manage_files import get_list_classes
 from transformDesign import transformDesign
@@ -106,6 +107,11 @@ def measure_all():
     ratio = float(nND+nD)/float(nD)
     print '-----> nD={0}'.format(nD)
     print '-----> Automation ratio is: {0}'.format(ratio)
+    measured_all_classes['nD'] = nD
+    measured_all_classes['ratio'] = ratio
 
+    f_pickle = file('QuasarMetrics.pickle', 'w')
+    pickle.dump(measured_all_classes, f_pickle)
+    
 if __name__ == "__main__":
     measure_all()
