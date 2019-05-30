@@ -28,6 +28,18 @@ def measure_file(filename):
     eloc = how_many_lines(eloc_path)
     #print 'File {0} is: loc={1} eloc={2}'.format(filename, loc, eloc)
     return eloc
+
+
+def is_string_printable(t):
+    return any( c in string.ascii_letters for c in t)
+
+def measure_file_raw(filename):
+    ''' Returns a pair of (non-empty)LoC and chars'''
+    f = open(filename, 'r')
+    lines = filter(lambda s: is_string_printable(s), f.readlines())
+    # filter lines which are whitespace only
+    return len(lines)
+
     
 def get_file_names(perspective, class_name):    
     files_per_perspective = {
@@ -100,13 +112,14 @@ def measure_all():
         for key in measured_class:
             measured_all_classes[key] = measured_all_classes.get(key, 0) + measured_class[key]
 
-    # config_xsd = measure_file('build/Configuration/Configuration.xsd')
-    # print 'Configuration: '+str(config_xsd)
+    nND_config_xsd = measure_file_raw('build/Configuration/Configuration.xsd')
+    print '-----> Configuration: '+str(nND_config_xsd)
+    
 
     print '-----> Grand total is:'
     print measured_all_classes
     nD = measured_all_classes['nIC'] - measured_all_classes['nGS'] # developer-written code
-    nND = measured_all_classes['nND']
+    nND = measured_all_classes['nND'] + nND_config_xsd
     ratio = float(nND+nD)/float(nD)
     print '-----> nD={0}'.format(nD)
     print '-----> Automation ratio is: {0}'.format(ratio)
