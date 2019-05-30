@@ -112,22 +112,31 @@ def measure_all():
         for key in measured_class:
             measured_all_classes[key] = measured_all_classes.get(key, 0) + measured_class[key]
 
+
+    nD = measured_all_classes['nIC'] - measured_all_classes['nGS'] # developer-written code
+    nND = measured_all_classes['nND']
+    ratio = float(nND+nD)/float(nD)
+    print '-----> quasar-classes total: '
+    print '-----> nND={0} nD={1} Automation ratio is: {2}'.format(nND, nD, ratio)
+            
     nND_config_xsd = measure_file_raw('build/Configuration/Configuration.xsd')
     print '-----> Configuration: '+str(nND_config_xsd)
-    
 
-    print '-----> Grand total is:'
-    print measured_all_classes
     nD = measured_all_classes['nIC'] - measured_all_classes['nGS'] # developer-written code
     nND = measured_all_classes['nND'] + nND_config_xsd
     ratio = float(nND+nD)/float(nD)
     print '-----> nD={0}'.format(nD)
     print '-----> Automation ratio is: {0}'.format(ratio)
-    measured_all_classes['nD'] = nD
-    measured_all_classes['ratio'] = ratio
 
+    grand_total = measured_all_classes
+    grand_total['nD'] = nD
+    grand_total['nND'] = nND
+    grand_total['ratio'] = ratio
+    print '-----> Grand total is:'
+    print grand_total
+    
     f_pickle = file('QuasarMetrics.pickle', 'w')
-    pickle.dump(measured_all_classes, f_pickle)
+    pickle.dump(grand_total, f_pickle)
     
 if __name__ == "__main__":
     measure_all()
