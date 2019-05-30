@@ -14,6 +14,17 @@ def os_system_report_failure(cmd):
     if rv != 0:
         raise Exception('This command failed: {0}'.format(cmd))
 
+def is_string_printable(t):
+    return any( c in string.ascii_letters for c in t)
+
+def measure_file_raw(filename):
+    ''' Returns a pair of (non-empty)LoC and chars'''
+    f = open(filename, 'r')
+    lines = filter(lambda s: is_string_printable(s), f.readlines())
+    # filter lines which are whitespace only
+    return len(lines)
+
+    
 def how_many_lines(path):
     f = open(path, 'r')
     lines = f.readlines()
@@ -30,15 +41,6 @@ def measure_file(filename):
     return eloc
 
 
-def is_string_printable(t):
-    return any( c in string.ascii_letters for c in t)
-
-def measure_file_raw(filename):
-    ''' Returns a pair of (non-empty)LoC and chars'''
-    f = open(filename, 'r')
-    lines = filter(lambda s: is_string_printable(s), f.readlines())
-    # filter lines which are whitespace only
-    return len(lines)
 
     
 def get_file_names(perspective, class_name):    
