@@ -7,15 +7,26 @@ sys.path.insert(0, 'FrameworkInternals')
 from manage_files import get_list_classes
 from transformDesign import transformDesign
 
-def is_string_printable(t):
-    return any( c in string.ascii_letters for c in t)
+def os_system_report_failure(cmd):
+    """ Throws when the invocation returned non-zero """
+    rv = os.system(cmd)
+    if rv != 0:
+        raise Exception('This command failed: {0}'.format(cmd))
 
+def how_many_lines(path):
+    f = open(path, 'r')
+    lines = f.readlines()
+    return len(lines)
+    
 def measure_file(filename):
     ''' Returns a pair of (non-empty)LoC and chars'''
-    f = open(filename, 'r')
-    lines = filter(lambda s: is_string_printable(s), f.readlines())
-    # filter lines which are whitespace only
-    return len(lines)
+    #print 'Measuring ELoC of file {0}'.format(filename)
+    eloc_path = filename+'.eloc'
+    os_system_report_failure('gcc -fpreprocessed -dD -E -P {0} > {1}'.format(filename, eloc_path))
+    loc = how_many_lines(filename)
+    eloc = how_many_lines(eloc_path)
+    #print 'File {0} is: loc={1} eloc={2}'.format(filename, loc, eloc)
+    return eloc
     
 def get_file_names(perspective, class_name):    
     files_per_perspective = {
@@ -32,18 +43,22 @@ def measure_all():
     total_lines_stub_with_user_code = 0
     total_lines_stub = 0
     all_classes = get_list_classes('Design/Design.xml')
+    print '-----> List of classes:', map(lambda c: c['name'], all_classes)
+    print '-----> Will analyze classes one by one'
     for class_desc in all_classes:
+        print '----> At class: {0}'.format(class_desc['name'])
         perspectives = ['AddressSpace']
         if class_desc['has_device_logic']:
             perspectives.append('Device')
             perspectives.append('DeviceBase')
+        print '---> Class {0} has perspectives {1}'.format(class_desc['name'], perspectives)
         for perspective in perspectives:
             names = get_file_names(perspective, class_desc['name'])
             
-            print 'processing class='+class_desc['name']+ ': '+str(names)
+            #print 'processing class='+class_desc['name']+ ': '+str(names)
             for name in names:
                 lines = measure_file(name)
-                print name+'  '+str(lines)
+                print '--> File {0}: {1} ELoC'.format(name, lines)
                 if perspective == 'AddressSpace':
                     total_lines_fully_automated += lines
                 elif perspective == 'Device':
