@@ -37,7 +37,49 @@ def get_file_names(perspective, class_name):
     
     names = map( lambda x: x.format(class_name), files_per_perspective[perspective] )
     return names
+
+def measure_quasar_class(class_desc):
+    """ returns a dictionary of: nND (non-developer code, e.g. address-space or base of device-logic)  """
+    nND = 0  # non-developer generated code
+    nIC = 0  # inter-leaved code of generated and developer
+    nGS = 0  # lines of only stub code
+    total_lines_fully_automated = 0
+    total_lines_stub = 0
+    total_lines_stub_with_user_code = 0
+    print '----> At class: {0}'.format(class_desc['name'])
+    perspectives = ['AddressSpace']
+    if class_desc['has_device_logic']:
+        perspectives.append('Device')
+        perspectives.append('DeviceBase')
+    print '---> Class {0} has perspectives {1}'.format(class_desc['name'], perspectives)
+    for perspective in perspectives:
+        file_names = get_file_names(perspective, class_desc['name'])
+        for file_name in file_names:
+            lines = measure_file(file_name)
+            print '--> File {0}: {1} ELoC'.format(file_name, lines)
+            if perspective == 'AddressSpace':
+                nND += lines
+            elif perspective == 'Device':
+                nIC += lines
+            elif perspective == 'DeviceBase':
+                nND += lines
+    if class_desc['has_device_logic']:
+        # now generate only stubs
+        devicelogic_stub_h_path = 'dlstub.h'
+        devicelogic_stub_cpp_path = 'dlstub.cpp'
+        transformDesign(os.path.sep.join(['Device','designToDeviceHeader.xslt']), devicelogic_stub_h_path, requiresMerge=False, astyleRun=False, additionalParam="className=" + class_desc['name'])
+        lines_fake = measure_file(devicelogic_stub_h_path)
+        print '--> File Devicelogic h: {0} ELoc'.format(lines_fake)
+        nGS += lines_fake
+        transformDesign(os.path.sep.join(['Device','designToDeviceBody.xslt']), devicelogic_stub_cpp_path, requiresMerge=False, astyleRun=False, additionalParam="className=" + class_desc['name'])
+        lines_fake = measure_file(devicelogic_stub_cpp_path)
+        print '--> File Devicelogic cpp: {0} ELoc'.format(lines_fake)
+        nGS += lines_fake
+    nD = nIC - nGS # developer-written code
+    print '---> Class has {0} ELoCs of developer-written code and {1} ELoCs of generated code, so the automation factor is {2}'.format(nD, nND, float(nND+nD)/float(nD))
+    return {'nND':nND, 'nIC':nIC, 'nGS':nGS}
     
+
 def measure_all():
     total_lines_fully_automated = 0
     total_lines_stub_with_user_code = 0
@@ -45,48 +87,25 @@ def measure_all():
     all_classes = get_list_classes('Design/Design.xml')
     print '-----> List of classes:', map(lambda c: c['name'], all_classes)
     print '-----> Will analyze classes one by one'
-    for class_desc in all_classes:
-        print '----> At class: {0}'.format(class_desc['name'])
-        perspectives = ['AddressSpace']
-        if class_desc['has_device_logic']:
-            perspectives.append('Device')
-            perspectives.append('DeviceBase')
-        print '---> Class {0} has perspectives {1}'.format(class_desc['name'], perspectives)
-        for perspective in perspectives:
-            names = get_file_names(perspective, class_desc['name'])
-            for name in names:
-                lines = measure_file(name)
-                print '--> File {0}: {1} ELoC'.format(name, lines)
-                if perspective == 'AddressSpace':
-                    total_lines_fully_automated += lines
-                elif perspective == 'Device':
-                    total_lines_stub_with_user_code += lines
-                elif perspective == 'DeviceBase':
-                    total_lines_fully_automated += lines
-        if class_desc['has_device_logic']:
-            # now generate only stubs
-            devicelogic_stub_h_path = 'dlstub.h'
-            devicelogic_stub_cpp_path = 'dlstub.cpp'
-            transformDesign(os.path.sep.join(['Device','designToDeviceHeader.xslt']), devicelogic_stub_h_path, requiresMerge=False, astyleRun=False, additionalParam="className=" + class_desc['name'])
-            lines_fake = measure_file(devicelogic_stub_h_path)
-            print '--> File Devicelogic h: {0} ELoc'.format(lines_fake)
-            total_lines_stub += lines_fake
-            transformDesign(os.path.sep.join(['Device','designToDeviceBody.xslt']), devicelogic_stub_cpp_path, requiresMerge=False, astyleRun=False, additionalParam="className=" + class_desc['name'])
-            lines_fake = measure_file(devicelogic_stub_cpp_path)
-            print '--> File Devicelogic cpp: {0} ELoc'.format(lines_fake)
-            total_lines_stub += lines_fake
 
-    config_xsd = measure_file('build/Configuration/Configuration.xsd')
-    print 'Configuration: '+str(config_xsd)
-                    
-    total_lines_fully_automated += config_xsd
-    total_lines_fully_automated += total_lines_stub
-    print 'Fully automated lines: '+str(total_lines_fully_automated)
-    print 'Stub with user code: '+str(total_lines_stub_with_user_code)
-    print 'Raw stub: '+str(total_lines_stub)
-    user_code_lines = total_lines_stub_with_user_code - total_lines_stub
-    print 'User code lines: '+str(user_code_lines)+'   reduction='+str((total_lines_stub_with_user_code+total_lines_fully_automated)/float(user_code_lines))
+    measured_all_classes = {}
     
+    for class_desc in all_classes:
+        measured_class = measure_quasar_class(class_desc)
+        print measured_class
+        for key in measured_class:
+            measured_all_classes[key] = measured_all_classes.get(key, 0) + measured_class[key]
+
+    # config_xsd = measure_file('build/Configuration/Configuration.xsd')
+    # print 'Configuration: '+str(config_xsd)
+
+    print '-----> Grand total is:'
+    print measured_all_classes
+    nD = measured_all_classes['nIC'] - measured_all_classes['nGS'] # developer-written code
+    nND = measured_all_classes['nND']
+    ratio = float(nND+nD)/float(nD)
+    print '-----> nD={0}'.format(nD)
+    print '-----> Automation ratio is: {0}'.format(ratio)
 
 if __name__ == "__main__":
     measure_all()
